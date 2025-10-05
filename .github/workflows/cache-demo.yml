@@ -1,0 +1,43 @@
+name: Cache Demo
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  cache-example:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache
+            node_modules
+          key: cache-98dc643-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+          restore-keys: |
+            cache-98dc643-${{ runner.os }}-
+      
+      - name: prime-cache-98dc643
+        run: |
+          if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+            echo "Cache hit! Dependencies were restored from cache."
+          else
+            echo "Cache miss! Dependencies will be downloaded and cached."
+          fi
+          echo "Cache hit status: ${{ steps.cache.outputs.cache-hit }}"
+      
+      - name: Install dependencies (if cache miss)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          # Example: npm install or pip install
+          # For demo purposes, we'll create some dummy files
+          mkdir -p ~/.cache
+          echo "Dummy dependency file" > ~/.cache/deps.txt
+          echo "Installation complete"
